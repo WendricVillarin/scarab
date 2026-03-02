@@ -1,0 +1,181 @@
+import { useCallback, useState, useEffect } from 'react';
+import Header from './Header.jsx';
+import Footer from './Footer.jsx';
+import Result from './Result.jsx';
+import UrlsTools from './UrlsTools.jsx';
+import PrivacyPolicyModal from './PrivacyPolicyModal.jsx';
+
+function App() {
+  const [resultText, setResultText] = useState('');
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+
+  useEffect(() => {
+    const hasAgreed = localStorage.getItem('privacyPolicyAgreed');
+    if (!hasAgreed) {
+      setShowPrivacyModal(true);
+    }
+  }, []);
+
+  const analyzeUrl = useCallback(async (input) => {
+    setResultText('');
+
+    if (typeof input !== 'string' || !input.trim()) return;
+
+    // Normalize URL (ensure scheme)
+    let urlObj;
+    try {
+      urlObj = new URL(input.startsWith('http') ? input : `https://${input}`);
+    } catch (err) {
+      setResultText('incorrect url no tld');
+      return;
+    }
+
+    const hostname = urlObj.hostname || '';
+
+    // Basic TLD check
+    if (!/\.[a-z]{2,}$/i.test(hostname)) {
+      setResultText('incorrect url no tld');
+      return;
+    }
+
+    const lowerHref = urlObj.href.toLowerCase();
+  // 1. Social Media & Content Platforms
+  // (These usually host profiles, not unique business privacy policies)
+  const socialPatterns = [
+    /facebook\.com/, /instagram\.com/, /twitter\.com/, /x\.com/, 
+    /linkedin\.com/, /tiktok\.com/, /pinterest\.com/, /reddit\.com/, 
+    /youtube\.com/, /tumblr\.com/, /medium\.com/, /substack\.com/, /google\.com/, /telegra\.ph/, 
+    /sites\.google\.com/, /docs\.google\.com/, /drive\.google\.com/
+  ];
+
+  // 2. CMS & Website Builders
+  // (These are "generic" because they often use default, unedited templates)
+  const cmsPatterns = [
+    /blogspot\.com/, /wordpress\.com/, /wix\.com/, /weebly\.com/, 
+    /squarespace\.com/, /shopify\.com/, /webflow\.io/, /jimdosite\.com/, 
+    /godaddy\.com/, /carrd\.co/, /strikingly\.com/, /bitrix24\.site/, /\.site/, /\.github.io/
+  ];    
+
+  // 3. Known Policy Generator URL Paths
+  // (Direct indicators that the URL itself belongs to a generator service)
+  const generatorUrlPatterns = [
+    /privacy_statements/, /policy-generator/, /termsfeed/, /termly/, 
+    /iubenda/, /getterms/, /privacypolicy/, /privacypolicyonline\.com/, /privacypolicytemplate\.net/, 
+    /app-privacy-policy\.com/, /privacypolicyapp\.com/, /freeprivacypolicy/
+  ];
+
+  // 4. Known Risky/Generic Websites
+  // (These are known to be suspicious or use generic policies)
+  const riskyDomains = [
+    /otieu\.com/, /e-droid\.net/, /anypage\.net/, /fakesite\.xyz/, 
+    /flycricket\.io/, /storeguillemot\.com/, /pastebin\.ph/
+  ];
+
+// Combine them for the check
+const genericPatterns = [...socialPatterns, ...cmsPatterns, ...generatorUrlPatterns, ...riskyDomains];
+    
+    // Check for risky domains first with specific message
+    if (riskyDomains.some((p) => p.test(lowerHref))) {
+      setResultText('App using a generic privacy policy (known risky and suspicious)');
+      return;
+    }
+    
+    // Check other generic patterns
+    if (genericPatterns.some((p) => p.test(lowerHref))) {
+      setResultText('App using a generic privacy policy');
+      return;
+    }
+
+    const badTlds = [/\.xyz$/, /\.space$/, /\.top$/, /\.tk$/, /\.ml$/, /\.ga$/, /\.cf$/, 
+      /\.stream$/, /\.cricket$/, /\.date$/, /\.download$/, /\.webcam$/, /\.review$/, /\.txt$/, 
+      /\.men$/, /\.gay$/, /\.racing$/, /\.loan$/, /\.faith$/];
+    if (badTlds.some((r) => r.test(hostname))) {
+      setResultText('App using a generic privacy policy (bad-natured TLD)');    
+      return;
+    }
+
+    // Fetch page content via CORS proxy (replace with your own server in production)
+    setResultText('analyzing content...');
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlObj.href)}`;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const resp = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!resp.ok) throw new Error('Network response not ok');
+
+      const { contents: html = '' } = await resp.json();
+      const lowerHtml = html.toLowerCase();
+
+      // Strip scripts and tags quickly to compute visible word count
+      const noScripts = html.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+      const visible = noScripts.replace(/<[^>]+>/g, ' ');
+      const wordCount = visible.split(/\s+/).filter(Boolean).length;
+
+      // Heuristics in priority order
+      const generatorIndicators = [
+      // Specific Generator Names
+      'termsfeed', 'termlit', 'iubenda', 'termly', 'getterms', 
+      'privacypolicies.com', 'wpautoterms', 'policygenerator', 
+      'app-privacy-policy.com', 'privacypolicyapp.com', 'freeprivacypolicy',
+      
+      // Specific Generator Phrases 
+      'this privacy policy was generated by', 
+      'created using a privacy policy generator',
+      'generated by a free privacy policy',
+      'generated by a privacy policy',
+      'policy was created using',
+      'this document was created using',
+      'free privacy policy template'
+    ];
+      if (generatorIndicators.some((s) => lowerHtml.includes(s))) {
+        setResultText('App using a generic privacy policy (generated by tool)');
+        return;
+      }
+
+      if (wordCount < 400) {
+        setResultText('App using a generic privacy policy (insufficient word count)');
+        return;
+      }
+
+      const vaguePatterns = [/\[insert company name\]/i, /your website name/i, /\[insert date\]/i, /placeholder company/i, /company name here/i];
+      if (vaguePatterns.some((r) => r.test(visible))) {
+        setResultText('App using a generic privacy policy (unfilled template placeholders)');
+        return;
+      }
+
+      const structuralTags = (html.match(/<(nav|header|footer|section|aside|main)\b/gi) || []).length;
+      if (structuralTags < 2) {
+        setResultText('App using a generic privacy policy (plain design/no UI structure)');
+        return;
+      }
+
+      setResultText('App appears to be a legitimate privacy policy');
+    } catch (err) {
+      // On network or parsing failure, fall back to conservative messaging
+      if (genericPatterns.some((p) => p.test(lowerHref))) {
+        setResultText('App using a generic privacy policy (matched blocked pattern)');
+      } else {
+        setResultText('App Privacy Policy uncertain (content could not be scanned, do manual check to be safe)');
+      }
+    }
+  }, []);
+
+  return (
+    <>
+      {showPrivacyModal && (
+        <PrivacyPolicyModal onClose={() => setShowPrivacyModal(false)} />
+      )}
+      <Header />
+      <main className="app-main">
+        <Result message={resultText} onAnalyze={analyzeUrl} />
+      </main>
+      <UrlsTools />
+      <Footer />
+    </>
+  );
+}
+
+export default App;

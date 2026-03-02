@@ -1,0 +1,25 @@
+/* Header: subtle glass with neon accent */
+.app-header{
+  width: 100%;
+  text-align:center;
+  max-width: var(--content-max-width); /* Apply common max-width */
+  margin: 0 auto; /* Center the header */
+  padding:28px 18px;
+  box-sizing: border-box;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
+  border:1px solid var(--glass-border);
+  backdrop-filter: blur(8px) saturate(120%);
+  box-shadow: 0 12px 40px rgba(2,6,23,0.7), 0 1px 0 rgba(255,255,255,0.02) inset;
+  position:relative;
+}
+
+
+
+.app-title{ margin:0; font-size:1.5rem; font-weight:700; letter-spacing:-0.02em; color:#eaf4ff }
+.subtitle{ margin:6px 0 0; font-size:0.95rem; color:var(--muted) }
+
+@media(min-width:800px){
+ 
+  .app-title{ font-size:2rem }
+}

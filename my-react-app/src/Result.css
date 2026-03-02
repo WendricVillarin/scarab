@@ -1,0 +1,37 @@
+/* Result / Dashboard area */
+.result {
+  width: 100%;
+  max-width: var(--content-max-width); /* Use the common max-width */
+  margin: 0 auto; /* Ensure it's centered */
+  padding: 18px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid var(--glass-border); box-shadow:0 12px 40px rgba(2,6,23,0.6);
+}
+
+.result-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px }
+.result-header h3{ margin:0; font-size:1.05rem; color:#eaf4ff }
+.result-sub{ color:white; font-size:0.95rem }
+.result-sub {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+/* Hover effect */
+.result-sub:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #007bff; /* Or your primary brand color */
+}
+
+/* Style when it's successfully copied */
+.result-sub.copied {
+  color: #792bff;
+  font-weight: bold;
+}
+.cards-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:8px }
+
+.placeholder{ color:var(--muted); font-style:italic; padding:22px; text-align:center }
+

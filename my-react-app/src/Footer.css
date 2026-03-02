@@ -1,0 +1,29 @@
+
+/* Footer styles: colored bar fixed at bottom */
+.app-footer {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background:linear-gradient(90deg,var(--accent-start),var(--accent-end));
+	color: #ffffff;
+	text-align: center;
+	padding: 0.75rem 1rem;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+	font-size: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.app-footer .footer-content {
+	max-width: 450px;
+	margin: 0 auto;
+}
+
+.app-footer p {
+	margin: 0;
+	line-height: 1;
+}
+

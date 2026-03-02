@@ -1,0 +1,33 @@
+/* Glassmorphism search bar + analyze button */
+.text-field{
+  display:grid; gap:12px; width:100%; max-width:980px; margin:12px auto 0; padding:18px;
+
+}
+
+.text-field label{ color:var(--muted); font-size:0.95rem }
+
+.text-field input[type="text"]{
+  width:100%; padding:16px 18px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color: #eaf4ff; font-size:1.02rem; height:52px; box-sizing:border-box;
+}
+
+.text-field input[type="text"]::placeholder{ color: rgba(234,244,255,0.35) }
+.text-field input[type="text"]:focus{ outline:none; box-shadow: 0 8px 30px var(--neon); border-color: rgba(14,165,249,0.5) }
+
+.text-field .controls{ display:flex; gap:12px; align-items:center; justify-content:space-between }
+
+.text-field button{ padding:0 18px; border-radius:12px; border:none; cursor:pointer; color:#fff; font-weight:600;
+  background:linear-gradient(90deg,var(--accent-start),var(--accent-end));
+  box-shadow: 0 8px 30px rgba(124,58,237,0.18), 0 0 28px rgba(14,165,249,0.06);
+  transition: transform 120ms ease, box-shadow 120ms ease; height:52px; display:flex; align-items:center; justify-content:center;
+}
+.text-field button:hover:not(:disabled){ transform:translateY(-3px); box-shadow:0 18px 60px rgba(124,58,237,0.16) }
+.text-field button:disabled{ opacity:0.5; cursor:default }
+
+@media(min-width:720px){
+  .text-field{ grid-template-columns: 1fr auto; align-items:center }
+  .text-field label{ grid-column:1 / -1 }
+  .text-field input[type="text"]{ grid-column: 1 / 2; box-sizing: border-box }
+  .text-field button{ grid-column: 2 / 3; justify-self: end; margin-left: 8px }
+}
